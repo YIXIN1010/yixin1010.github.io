@@ -66,14 +66,49 @@ function getColorIntensity(count: number): string {
 const heatmapData = getHeatmapData(publishedPosts);
 const weeks = generateHeatmapWeeks(currentYear);
 
+function getCategoryIcon(category: string): string {
+  const icons: Record<string, string> = {
+    '随笔生活': '✍️',
+    '技术笔记': '💻',
+    '工具收藏': '🔧',
+    '读书笔记': '📚'
+  };
+  return icons[category] || '📄';
+}
+
+const categories = ['随笔生活', '技术笔记', '工具收藏', '读书笔记'];
+
+function getLatestPostByCategory(categories: string[], posts: typeof publishedPosts) {
+  const result: Record<string, typeof publishedPosts[0] | null> = {};
+  
+  categories.forEach(cat => {
+    const filtered = posts.filter(post => post.data.category === cat);
+    if (filtered.length > 0) {
+      filtered.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+      result[cat] = filtered[0];
+    } else {
+      result[cat] = null;
+    }
+  });
+  
+  return result;
+}
+
+const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts);
+
 
 ---
 
-<BaseLayout title="一心 - 记录日常，整理思想，长期写作。" description="一个用于记录生活、阅读、技术和思考的个人博客。">
+<BaseLayout title="一心博客 - 记录日常，整理思想，长期写作。" description="一个用于记录生活、阅读、技术和思考的个人博客。">
   <div class="home">
     <div class="site-header">
-      <h1 class="site-title">一心</h1>
+      <h1 class="site-title">一心<span class="site-title-secondary">博客</span></h1>
       <p class="site-description">记录日常，整理思想，长期写作。</p>
+    </div>
+
+    <div class="about-me">
+      <h2 class="about-title">About Me</h2>
+      <p class="about-content">这是一个属于文科生的个人知识系统博客，不定期发布随笔与短句。希望保持创作、复盘、总结的状态，多一点对世界的理解与认识，始终保持好奇的心态。</p>
     </div>
 
     <div class="heatmap-section">
@@ -156,33 +191,41 @@ const weeks = generateHeatmapWeeks(currentYear);
     </div>
 
     <div class="posts-section">
-      <h2 class="section-title">📝 最新文章</h2>
-      <div class="posts-list">
-        {sortedPosts.map((post) => {
-          const date = new Date(post.data.date);
-          const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      <h2 class="section-title">📝 专栏更新</h2>
+      <div class="category-posts">
+        {categories.map((category) => {
+          const post = latestPostsByCategory[category];
+          const date = post ? new Date(post.data.date) : null;
+          const formattedDate = date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '';
           
           return (
-            <article class="post-item">
-              <div class="post-header">
-                <time class="post-date">{formattedDate}</time>
-                {post.data.category && (
-                  <span class="post-category">{post.data.category}</span>
-                )}
-              </div>
-              <h2 class="post-title">
-                <a href={`/posts/${post.slug}`}>{post.data.title}</a>
-              </h2>
-              <p class="post-summary">{post.data.summary}</p>
-              <div class="post-footer">
-                <div class="post-tags">
-                  {post.data.tags.map((tag) => (
-                    <span class="tag">#{tag}</span>
-                  ))}
-                </div>
-                <a href={`/posts/${post.slug}`} class="read-more">阅读全文 →</a>
-              </div>
-            </article>
+            <div class="category-section">
+              <h3 class="category-title">
+                <span class="category-icon">{getCategoryIcon(category)}</span>
+                <span>{category}</span>
+              </h3>
+              {post ? (
+                <article class="post-item">
+                  <div class="post-header">
+                    <time class="post-date">{formattedDate}</time>
+                  </div>
+                  <h2 class="post-title">
+                    <a href={`/posts/${post.slug}`}>{post.data.title}</a>
+                  </h2>
+                  <p class="post-summary">{post.data.summary}</p>
+                  <div class="post-footer">
+                    <div class="post-tags">
+                      {post.data.tags.map((tag) => (
+                        <span class="tag">#{tag}</span>
+                      ))}
+                    </div>
+                    <a href={`/posts/${post.slug}`} class="read-more">阅读全文 →</a>
+                  </div>
+                </article>
+              ) : (
+                <div class="empty-post">暂无文章</div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -225,6 +268,38 @@ const weeks = generateHeatmapWeeks(currentYear);
       color: #555555;
       font-size: 1.15em;
       line-height: 1.7;
+    }
+
+    .site-title-secondary {
+      font-size: 0.5em;
+      font-weight: 400;
+      color: #666666;
+      margin-left: 0.3em;
+      letter-spacing: normal;
+    }
+
+    .about-me {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+      background: transparent;
+      border-radius: 0;
+      text-align: left;
+    }
+
+    .about-title {
+      margin: 0 0 1rem;
+      font-size: 0.9em;
+      font-weight: 600;
+      color: #888888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .about-content {
+      margin: 0;
+      color: #444444;
+      font-size: 0.95em;
+      line-height: 1.8;
     }
 
     .section-wrapper {
@@ -441,6 +516,38 @@ const weeks = generateHeatmapWeeks(currentYear);
 
     .read-more:hover {
       background: transparent;
+    }
+
+    .category-posts {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .category-section {
+      padding: 1.5rem;
+      background: #FAFAF7;
+      border-radius: 8px;
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 1.25rem;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #333333;
+    }
+
+    .category-icon {
+      font-size: 1.2em;
+    }
+
+    .empty-post {
+      color: #888888;
+      font-style: italic;
+      padding: 1rem 0;
     }
 
     .subscribe-prompt {
