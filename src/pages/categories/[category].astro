@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const publishedPosts = posts.filter((post) => !post.data.draft);
+  
+  const allCategories = new Set<string>();
+  publishedPosts.forEach((post) => {
+    if (post.data.category) {
+      allCategories.add(post.data.category);
+    }
+  });
+  
+  return Array.from(allCategories).map((category) => ({
+    params: { category },
+  }));
+}
+
+const category = Astro.params.category;
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+const categoryPosts = publishedPosts.filter((post) => post.data.category === category);
+const sortedPosts = categoryPosts.sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+---
+
+<BaseLayout title={`${category} - 一心`} description={`专栏 "${category}" 下的文章`}>
+  <div class="category-page">
+    <div class="page-header">
+      <h1>专栏: {category}</h1>
+    </div>
+    
+    {sortedPosts.length > 0 ? (
+      <div class="posts-list">
+        {sortedPosts.map((post) => {
+          const date = new Date(post.data.date);
+          const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          
+          return (
+            <article class="post-item">
+              <time class="post-date">{formattedDate}</time>
+              <h2 class="post-title">
+                <a href={`/posts/${post.slug}`}>{post.data.title}</a>
+              </h2>
+              <p class="post-summary">{post.data.summary}</p>
+            </article>
+          );
+        })}
+      </div>
+    ) : (
+      <p>该专栏下暂无文章。</p>
+    )}
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    .posts-list {
+      margin-top: 1.5rem;
+    }
+
+    .post-item {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #E5E5E5;
+    }
+
+    .post-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .post-date {
+      display: block;
+      color: #999999;
+      font-size: 0.85em;
+      margin-bottom: 0.5rem;
+    }
+
+    .post-title {
+      margin: 0 0 0.5rem;
+      font-size: 1.2em;
+    }
+
+    .post-title a {
+      color: #222222;
+    }
+
+    .post-title a:hover {
+      color: #005BBB;
+      text-decoration: none;
+    }
+
+    .post-summary {
+      margin: 0;
+      color: #666666;
+      font-size: 0.95em;
+    }
+  </style>
+</BaseLayout>

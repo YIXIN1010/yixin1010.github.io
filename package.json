@@ -1,0 +1,24 @@
+{
+  "name": "yixin-blog",
+  "version": "1.0.0",
+  "description": "一个极简个人博客网站",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.5",
+    "astro": "^4.15.0",
+    "character-entities-legacy": "^3.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^20.11.0",
+    "gh-pages": "^6.3.0",
+    "typescript": "^5.3.3"
+  }
+}

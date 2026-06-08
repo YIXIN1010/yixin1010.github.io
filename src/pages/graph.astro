@@ -1,0 +1,646 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+
+function parseWikiLinks(content: string): string[] {
+  const linkRegex = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  const links: string[] = [];
+  let match;
+  while ((match = linkRegex.exec(content)) !== null) {
+    links.push(match[1].trim().toLowerCase());
+  }
+  return links;
+}
+
+function buildGraph(posts: { slug: string; data: { title: string; tags: string[] }; body: string }[]) {
+  const nodes: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    tags: string[];
+    size: number;
+    fixed: boolean;
+  }> = [];
+  const edges: Array<{ source: string; target: string }> = [];
+  const nodeMap = new Map<string, typeof nodes[0]>();
+
+  posts.forEach((post) => {
+    const slug = post.slug.toLowerCase();
+    const title = post.data.title;
+    
+    if (!nodeMap.has(slug)) {
+      const node = {
+        id: slug,
+        title: title,
+        slug: post.slug,
+        x: Math.random() * 600 + 100,
+        y: Math.random() * 400 + 100,
+        vx: 0,
+        vy: 0,
+        tags: post.data.tags,
+        size: 20 + post.data.tags.length * 2,
+        fixed: false
+      };
+      nodeMap.set(slug, node);
+      nodes.push(node);
+    }
+  });
+
+  posts.forEach((post) => {
+    const sourceSlug = post.slug.toLowerCase();
+    const content = post.body;
+    const links = parseWikiLinks(content);
+    
+    links.forEach((targetTitle) => {
+      let targetNode = null;
+      
+      for (const [key, node] of nodeMap) {
+        if (node.title.toLowerCase() === targetTitle || key === targetTitle) {
+          targetNode = node;
+          break;
+        }
+      }
+      
+      if (targetNode && sourceSlug !== targetNode.id) {
+        const exists = edges.some(
+          (e) => (e.source === sourceSlug && e.target === targetNode.id) ||
+                 (e.source === targetNode.id && e.target === sourceSlug)
+        );
+        
+        if (!exists) {
+          edges.push({
+            source: sourceSlug,
+            target: targetNode.id
+          });
+        }
+      }
+    });
+  });
+
+  return { nodes, edges };
+}
+
+const { nodes, edges } = buildGraph(publishedPosts);
+---
+
+<BaseLayout title="知识图谱 - 一心博客" description="文章关联网络，类似 Obsidian 的双链图谱">
+  <div class="graph-page">
+    <div class="page-header">
+      <h1>知识图谱</h1>
+    </div>
+
+    <div class="graph-container">
+      <div class="graph-controls">
+        <button id="reset-btn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M8 16H3v5"></path>
+          </svg>
+          重置视图
+        </button>
+        <button id="zoom-in-btn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          放大
+        </button>
+        <button id="zoom-out-btn" class="control-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          缩小
+        </button>
+      </div>
+
+      <div class="graph-wrapper">
+        <svg id="graph-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#999" />
+            </marker>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
+          <g class="edges">
+            {edges.map((edge) => {
+              const sourceNode = nodes.find((n) => n.id === edge.source);
+              const targetNode = nodes.find((n) => n.id === edge.target);
+              return (
+                <line
+                  class="edge"
+                  data-source={edge.source}
+                  data-target={edge.target}
+                  x1={sourceNode?.x || 0}
+                  y1={sourceNode?.y || 0}
+                  x2={targetNode?.x || 0}
+                  y2={targetNode?.y || 0}
+                />
+              );
+            })}
+          </g>
+          
+          <g class="nodes">
+            {nodes.map((node) => (
+              <g class="node-group" data-node-id={node.id}>
+                <circle
+                  class="node"
+                  r={node.size / 2}
+                  cx={node.x}
+                  cy={node.y}
+                  filter="url(#glow)"
+                />
+                <text
+                  class="node-label"
+                  x={node.x}
+                  y={node.y + node.size / 2 + 16}
+                  text-anchor="middle"
+                >
+                  {node.title.length > 10 ? node.title.slice(0, 10) + '...' : node.title}
+                </text>
+              </g>
+            ))}
+          </g>
+        </svg>
+      </div>
+
+      <div class="legend">
+        <h3>图例</h3>
+        <div class="legend-items">
+          <div class="legend-item">
+            <div class="legend-node"></div>
+            <span>文章节点</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-edge"></div>
+            <span>关联关系</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-number">{nodes.length}</div>
+        <div class="stat-label">文章节点</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{edges.length}</div>
+        <div class="stat-label">关联边</div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .graph-page {
+    padding: 1rem 0;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2D2D2D;
+    letter-spacing: -0.01em;
+  }
+
+  .graph-container {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 2rem;
+  }
+
+  .graph-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .control-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #F5F5F5;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    color: #333;
+  }
+
+  .control-btn:hover {
+    background: #E8E8E8;
+  }
+
+  .control-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .graph-wrapper {
+    width: 100%;
+    height: 600px;
+    overflow: hidden;
+    cursor: grab;
+    background: #FAFAF7;
+    border-radius: 12px;
+    border: 1px solid #E5E5E5;
+  }
+
+  .graph-wrapper:active {
+    cursor: grabbing;
+  }
+
+  #graph-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .edge {
+    stroke: #999;
+    stroke-width: 1.5;
+    stroke-opacity: 0.5;
+  }
+
+  .node {
+    fill: #0066CC;
+    stroke: #005BBB;
+    stroke-width: 2;
+    cursor: grab;
+    transition: fill 0.2s, stroke 0.2s, transform 0.2s;
+  }
+
+  .node:hover {
+    fill: #005BBB;
+    stroke: #004d99;
+  }
+
+  .node-label {
+    fill: #333;
+    font-size: 11px;
+    pointer-events: none;
+    user-select: none;
+    font-weight: 500;
+  }
+
+  .legend {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #E5E5E5;
+  }
+
+  .legend h3 {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+  }
+
+  .legend-items {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .legend-node {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #0066CC;
+    border: 2px solid #005BBB;
+  }
+
+  .legend-edge {
+    width: 30px;
+    height: 2px;
+    background: #999;
+  }
+
+  .stats-section {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .stat-card {
+    background: transparent;
+    border-radius: 0;
+    padding: 1.5rem 0;
+    text-align: left;
+    box-shadow: none;
+    border-bottom: 1px solid #E5E5E5;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0066CC;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: #666;
+  }
+
+  @media (max-width: 768px) {
+    .stats-section {
+      grid-template-columns: 1fr;
+    }
+
+    .graph-wrapper {
+      height: 400px;
+    }
+    
+    .graph-controls {
+      gap: 0.5rem;
+    }
+    
+    .control-btn {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ nodes, edges }}>
+  const svg = document.getElementById('graph-svg');
+  const container = document.querySelector('.graph-wrapper');
+
+  const nodeElements = document.querySelectorAll('.node-group');
+  const edgeElements = document.querySelectorAll('.edge');
+
+  const width = 800;
+  const height = 600;
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let draggingNode = null;
+  let dragOffset = { x: 0, y: 0 };
+  let isDraggingCanvas = false;
+  let dragStart = { x: 0, y: 0 };
+  let dragStartTransform = { x: 0, y: 0 };
+
+  function updatePositions() {
+    const nodeMap = new Map();
+    nodeElements.forEach((el) => {
+      const id = el.getAttribute('data-node-id');
+      const node = nodes.find(n => n.id === id);
+      if (node) {
+        nodeMap.set(id, node);
+        const circle = el.querySelector('.node');
+        const text = el.querySelector('.node-label');
+        circle.setAttribute('cx', node.x);
+        circle.setAttribute('cy', node.y);
+        text.setAttribute('x', node.x);
+        text.setAttribute('y', node.y + node.size / 2 + 16);
+      }
+    });
+
+    edgeElements.forEach((el) => {
+      const sourceId = el.getAttribute('data-source');
+      const targetId = el.getAttribute('data-target');
+      const source = nodeMap.get(sourceId);
+      const target = nodeMap.get(targetId);
+      if (source && target) {
+        el.setAttribute('x1', source.x);
+        el.setAttribute('y1', source.y);
+        el.setAttribute('x2', target.x);
+        el.setAttribute('y2', target.y);
+      }
+    });
+  }
+
+  function applyForces() {
+    if (draggingNode) return;
+
+    const repulsion = 500;
+    const attraction = 0.1;
+    const damping = 0.95;
+    const gravity = 0.01;
+
+    nodes.forEach((node) => {
+      if (node.fixed) return;
+      node.vx += (centerX - node.x) * gravity;
+      node.vy += (centerY - node.y) * gravity;
+    });
+
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].fixed) continue;
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (nodes[j].fixed) continue;
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        const force = repulsion / (dist * dist);
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        nodes[i].vx -= fx;
+        nodes[i].vy -= fy;
+        nodes[j].vx += fx;
+        nodes[j].vy += fy;
+      }
+    }
+
+    edges.forEach((edge) => {
+      const source = nodes.find(n => n.id === edge.source);
+      const target = nodes.find(n => n.id === edge.target);
+
+      if (source && target) {
+        const dx = target.x - source.x;
+        const dy = target.y - source.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const desiredDist = 120;
+
+        const force = (dist - desiredDist) * attraction;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        if (!source.fixed) {
+          source.vx += fx;
+          source.vy += fy;
+        }
+        if (!target.fixed) {
+          target.vx -= fx;
+          target.vy -= fy;
+        }
+      }
+    });
+
+    nodes.forEach((node) => {
+      if (node.fixed) return;
+      node.vx *= damping;
+      node.vy *= damping;
+      node.x += node.vx;
+      node.y += node.vy;
+
+      node.x = Math.max(node.size / 2, Math.min(width - node.size / 2, node.x));
+      node.y = Math.max(node.size / 2 + 20, Math.min(height - node.size / 2 - 20, node.y));
+    });
+  }
+
+  function animate() {
+    applyForces();
+    updatePositions();
+    requestAnimationFrame(animate);
+  }
+
+  function updateTransform() {
+    svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    svg.style.transformOrigin = 'center center';
+  }
+
+  function getMousePos(e) {
+    const rect = svg.getBoundingClientRect();
+    const x = (e.clientX - rect.left - translateX) / scale;
+    const y = (e.clientY - rect.top - translateY) / scale;
+    return { x, y };
+  }
+
+  nodeElements.forEach((el) => {
+    const circle = el.querySelector('.node');
+    const id = el.getAttribute('data-node-id');
+    const node = nodes.find(n => n.id === id);
+
+    circle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const pos = getMousePos(e);
+      draggingNode = node;
+      node.fixed = true;
+      dragOffset = {
+        x: pos.x - node.x,
+        y: pos.y - node.y
+      };
+      circle.style.cursor = 'grabbing';
+    });
+
+    circle.addEventListener('mouseenter', () => {
+      circle.style.stroke = '#005BBB';
+      circle.style.strokeWidth = '3';
+      if (!draggingNode) circle.style.cursor = 'grab';
+    });
+
+    circle.addEventListener('mouseleave', () => {
+      if (!draggingNode) {
+        circle.style.stroke = '#666';
+        circle.style.strokeWidth = '2';
+        circle.style.cursor = 'default';
+      }
+    });
+
+    circle.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      if (node && !draggingNode) {
+        window.location.href = `/posts/${node.slug}`;
+      }
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (draggingNode) {
+      const pos = getMousePos(e);
+      draggingNode.x = Math.max(20, Math.min(width - 20, pos.x - dragOffset.x));
+      draggingNode.y = Math.max(30, Math.min(height - 30, pos.y - dragOffset.y));
+      draggingNode.vx = 0;
+      draggingNode.vy = 0;
+      updatePositions();
+    } else if (isDraggingCanvas) {
+      translateX = dragStartTransform.x + (e.clientX - dragStart.x);
+      translateY = dragStartTransform.y + (e.clientY - dragStart.y);
+      updateTransform();
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggingNode) {
+      const circle = document.querySelector(`.node-group[data-node-id="${draggingNode.id}"] .node`);
+      if (circle) {
+        circle.style.cursor = 'grab';
+      }
+    }
+    draggingNode = null;
+    isDraggingCanvas = false;
+    container.style.cursor = 'default';
+  });
+
+  svg.addEventListener('mousedown', (e) => {
+    if (e.target === svg) {
+      isDraggingCanvas = true;
+      dragStart = { x: e.clientX, y: e.clientY };
+      dragStartTransform = { x: translateX, y: translateY };
+      container.style.cursor = 'grabbing';
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    nodes.forEach((node) => {
+      node.x = Math.random() * 600 + 100;
+      node.y = Math.random() * 400 + 100;
+      node.vx = 0;
+      node.vy = 0;
+      node.fixed = false;
+    });
+    translateX = 0;
+    translateY = 0;
+    scale = 1;
+    updateTransform();
+  });
+
+  document.getElementById('zoom-in-btn').addEventListener('click', () => {
+    const newScale = Math.min(scale + 0.1, 3);
+    const rect = svg.getBoundingClientRect();
+    translateX = rect.width / 2 - (rect.width / 2 - translateX) * (newScale / scale);
+    translateY = rect.height / 2 - (rect.height / 2 - translateY) * (newScale / scale);
+    scale = newScale;
+    updateTransform();
+  });
+
+  document.getElementById('zoom-out-btn').addEventListener('click', () => {
+    const newScale = Math.max(scale - 0.1, 0.3);
+    const rect = svg.getBoundingClientRect();
+    translateX = rect.width / 2 - (rect.width / 2 - translateX) * (newScale / scale);
+    translateY = rect.height / 2 - (rect.height / 2 - translateY) * (newScale / scale);
+    scale = newScale;
+    updateTransform();
+  });
+
+  updateTransform();
+  animate();
+</script>

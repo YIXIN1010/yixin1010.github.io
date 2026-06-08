@@ -1,0 +1,85 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="订阅 - 一心" description="订阅本站更新">
+  <div class="subscribe">
+    <div class="page-header">
+      <h1>订阅</h1>
+    </div>
+
+    <p>感谢你的关注！你可以通过以下方式订阅本站更新：</p>
+
+    <section>
+      <h2>RSS/Atom Feed</h2>
+      <p>使用任何 RSS 阅读器订阅：</p>
+      <div class="feed-url">
+        <code>https://example.com/atom.xml</code>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('https://example.com/atom.xml'); alert('已复制!')">复制</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>订阅说明</h2>
+      <ul>
+        <li>本站文章更新频率不定，通常每周 1-2 篇。</li>
+        <li>Feed 包含文章标题、摘要和链接。</li>
+        <li>推荐使用 <a href="https://feedly.com" target="_blank" rel="noopener">Feedly</a>、<a href="https://inoreader.com" target="_blank" rel="noopener">Inoreader</a> 等阅读器。</li>
+      </ul>
+    </section>
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    .feed-url {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 1rem;
+      background-color: #F5F5F5;
+      border-radius: 6px;
+    }
+
+    .feed-url code {
+      background-color: transparent;
+      font-size: 0.85em;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      padding: 0.4em 0.8em;
+      background-color: #005BBB;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .copy-btn:hover {
+      background-color: #1A5FB4;
+    }
+
+    li {
+      color: #444444;
+    }
+  </style>
+</BaseLayout>

@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="关于 - 一心" description="关于作者和关于本站">
+  <div class="about">
+    <div class="page-header">
+      <h1>关于</h1>
+    </div>
+
+    <section class="about-author">
+      <h2>关于作者</h2>
+      <p>心，一个普通的记录者。</p>
+      <p>热爱生活，喜欢阅读，偶尔写写代码。相信文字的力量，希望通过写作整理自己的思想，留下一些有价值的内容。</p>
+    </section>
+
+    <section class="about-site">
+      <h2>关于本站</h2>
+      <p>这是一个极简的个人博客，用于记录生活、阅读、技术和思考。</p>
+      <p>本站使用 <a href="https://astro.build" target="_blank" rel="noopener">Astro</a> 构建，托管在静态服务器上。所有内容均为原创，未经许可请勿转载。</p>
+    </section>
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    section {
+      margin-bottom: 2.5rem;
+    }
+
+    section:last-child {
+      margin-bottom: 0;
+    }
+
+    p {
+      color: #444444;
+      line-height: 1.8;
+    }
+  </style>
+</BaseLayout>

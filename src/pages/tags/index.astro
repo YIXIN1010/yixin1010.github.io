@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+
+const tagCount: Record<string, number> = {};
+publishedPosts.forEach((post) => {
+  post.data.tags.forEach((tag) => {
+    tagCount[tag] = (tagCount[tag] || 0) + 1;
+  });
+});
+
+const sortedTags = Object.entries(tagCount).sort(([a], [b]) => a.localeCompare(b, 'zh-CN'));
+---
+
+<BaseLayout title="标签 - 一心" description="文章标签">
+  <div class="tags-page">
+    <div class="page-header">
+      <h1>标签</h1>
+    </div>
+    
+    <div class="tags-list">
+      {sortedTags.map(([tag, count]) => (
+        <a href={`/tags/${tag}`} class="tag-item">
+          <span class="tag-name">#{tag}</span>
+          <span class="tag-count">{count}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .tag-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #FFFFFF;
+      border: 1px solid #E5E5E5;
+      border-radius: 20px;
+      color: #222222;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+
+    .tag-item:hover {
+      background-color: #F5F5F5;
+      text-decoration: none;
+    }
+
+    .tag-count {
+      color: #999999;
+      font-size: 0.85em;
+    }
+  </style>
+</BaseLayout>

@@ -1,0 +1,260 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  // 预定义所有专栏
+  const predefinedCategories = ['随笔生活', '技术笔记', '工具收藏', '读书笔记'];
+  
+  return predefinedCategories.map((category) => ({
+    params: { category },
+  }));
+}
+
+const category = Astro.params.category;
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+const categoryPosts = publishedPosts.filter((post) => post.data.category === category);
+const sortedPosts = categoryPosts.sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const categoryInfo: Record<string, { title: string; description: string; color: string }> = {
+  '技术笔记': { title: '技术笔记', description: '记录技术学习和实践的笔记', color: '#3182CE' },
+  '随笔生活': { title: '随笔生活', description: '记录生活、阅读和写作的点滴', color: '#E53E3E' },
+  '读书笔记': { title: '读书笔记', description: '阅读过程中的思考和感悟', color: '#38B2AC' },
+  '工具收藏': { title: '工具收藏', description: '好用的工具和效率软件推荐', color: '#D69E2E' },
+};
+
+const info = categoryInfo[category] || { title: category, description: '', color: '#666666' };
+---
+
+<BaseLayout title={`${info.title} - 一心`} description={info.description}>
+  <div class="column-page">
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      返回首页
+    </a>
+    
+    <header class="page-header">
+      <h1 class="page-title">{info.title}</h1>
+      {info.description && <p class="page-desc">{info.description}</p>}
+    </header>
+
+    {sortedPosts.length > 0 ? (
+      <div class="posts-list">
+        {sortedPosts.map((post) => {
+          const date = new Date(post.data.date);
+          const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          
+          return (
+            <article class="post-card">
+              <div class="post-header">
+                <time class="post-date">{formattedDate}</time>
+              </div>
+              <h2 class="post-title">
+                <a href={`/posts/${post.slug}`}>{post.data.title}</a>
+              </h2>
+              <p class="post-summary">{post.data.summary}</p>
+              <div class="post-footer">
+                <div class="post-tags">
+                  {post.data.tags.map((tag) => <span class="tag">#{tag}</span>)}
+                </div>
+                <a href={`/posts/${post.slug}`} class="read-more">阅读全文 →</a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <p>该专栏下暂无文章。</p>
+      </div>
+    )}
+  </div>
+
+  <style>
+    .column-page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem;
+    }
+
+    .page-header {
+      margin-bottom: 2.5rem;
+      padding: 2rem 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+    }
+
+    .page-title {
+      margin: 0 0 0.5rem;
+      font-size: 2.2em;
+      font-weight: 700;
+      color: #1A1A1A;
+      letter-spacing: -0.01em;
+    }
+
+    .page-desc {
+      margin: 0;
+      color: #555555;
+      font-size: 1.05em;
+    }
+
+    .posts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .post-card {
+      background: transparent;
+      border-radius: 0;
+      padding: 1.75rem 0;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid #E8E8E8;
+      transition: all 0.2s ease;
+    }
+
+    .post-card:hover {
+      box-shadow: none;
+      transform: none;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .post-date {
+      display: inline-flex;
+      color: #888888;
+      font-size: 0.85em;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .post-title {
+      margin: 0 0 0.75rem;
+      font-size: 1.35em;
+      font-weight: 600;
+    }
+
+    .post-title a {
+      color: #1A1A1A;
+      text-decoration: none;
+    }
+
+    .post-title a:hover {
+      color: #0066CC;
+    }
+
+    .post-summary {
+      margin: 0 0 1.25rem;
+      color: #555555;
+      line-height: 1.8;
+      font-size: 0.95em;
+    }
+
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .post-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      color: #666666;
+      font-size: 0.825em;
+      opacity: 0.85;
+    }
+
+    .read-more {
+      color: #0066CC;
+      font-size: 0.875em;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+      transition: all 0.2s ease;
+    }
+
+    .read-more:hover {
+      background: transparent;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 5rem 2rem;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: #888888;
+      font-size: 1.1em;
+    }
+
+    .back-link {
+      display: inline-flex;
+      margin-bottom: 2rem;
+      color: #666666;
+      font-size: 0.9em;
+      text-decoration: none;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: #0066CC;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .column-page {
+        padding: 2rem 1rem;
+      }
+      
+      .page-header {
+        padding: 1.5rem;
+      }
+      
+      .page-title {
+        font-size: 1.8em;
+      }
+      
+      .post-card {
+        padding: 1.25rem;
+      }
+      
+      .post-title {
+        font-size: 1.2em;
+      }
+      
+      .post-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</BaseLayout>

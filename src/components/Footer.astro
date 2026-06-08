@@ -1,0 +1,63 @@
+---
+---
+
+<footer>
+  <div class="footer-content">
+    <p class="copyright">© 2026 一心. All rights reserved.</p>
+    <p class="rss-link">
+      <a href="/atom.xml" target="_blank">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11a9 9 0 0 1 9 9" />
+          <path d="M4 4a16 16 0 0 1 16 16" />
+          <circle cx="5" cy="19" r="1" />
+        </svg>
+        RSS
+      </a>
+    </p>
+  </div>
+  <style>
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid #E5E5E5;
+      margin-top: auto;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
+    .copyright {
+      margin: 0;
+      color: #999999;
+      font-size: 0.85em;
+    }
+
+    .rss-link {
+      margin: 0;
+    }
+
+    .rss-link a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4em;
+      color: #666666;
+      font-size: 0.85em;
+    }
+
+    .rss-link a:hover {
+      color: #005BBB;
+      text-decoration: none;
+    }
+
+    @media (min-width: 768px) {
+      .footer-content {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+    }
+  </style>
+</footer>

@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+
+const categoryCount: Record<string, number> = {};
+publishedPosts.forEach((post) => {
+  if (post.data.category) {
+    categoryCount[post.data.category] = (categoryCount[post.data.category] || 0) + 1;
+  }
+});
+
+const sortedCategories = Object.entries(categoryCount).sort(([a], [b]) => a.localeCompare(b, 'zh-CN'));
+---
+
+<BaseLayout title="专栏 - 一心" description="文章专栏">
+  <div class="categories-page">
+    <div class="page-header">
+      <h1>专栏</h1>
+    </div>
+    
+    {sortedCategories.length > 0 ? (
+      <div class="categories-list">
+        {sortedCategories.map(([category, count]) => (
+          <a href={`/categories/${category}`} class="category-item">
+            <span class="category-name">{category}</span>
+            <span class="category-count">{count}</span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p>暂无专栏。</p>
+    )}
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    .categories-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .category-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #FFFFFF;
+      border: 1px solid #E5E5E5;
+      border-radius: 20px;
+      color: #222222;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+
+    .category-item:hover {
+      background-color: #F5F5F5;
+      text-decoration: none;
+    }
+
+    .category-count {
+      color: #999999;
+      font-size: 0.85em;
+    }
+  </style>
+</BaseLayout>

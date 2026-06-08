@@ -1,0 +1,505 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+const sortedPosts = publishedPosts.sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const currentYear = new Date().getFullYear();
+
+function getHeatmapData(posts: { data: { date: Date } }[]) {
+  const dayCounts: Record<string, number> = {};
+  
+  posts.forEach((post) => {
+    const date = new Date(post.data.date);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    dayCounts[dateStr] = (dayCounts[dateStr] || 0) + 1;
+  });
+  
+  return dayCounts;
+}
+
+function generateHeatmapWeeks(year: number) {
+  const weeks: (Date | null)[][] = [];
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+  
+  let currentDate = new Date(startDate);
+  let currentWeek: (Date | null)[] = [];
+  
+  // 前导空位：从周日开始，到1月1日之前的空位
+  const firstDay = currentDate.getDay();
+  for (let i = 0; i < firstDay; i++) {
+    currentWeek.push(null);
+  }
+  
+  while (currentDate <= endDate) {
+    currentWeek.push(new Date(currentDate));
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push(null);
+    }
+    weeks.push(currentWeek);
+  }
+  
+  return weeks;
+}
+
+function getColorIntensity(count: number): string {
+  if (!count || count === 0) return '#ebedf0';
+  if (count === 1) return '#c6e48b';
+  if (count === 2) return '#7bc96f';
+  if (count === 3) return '#239a3b';
+  return '#196127';
+}
+
+const heatmapData = getHeatmapData(publishedPosts);
+const weeks = generateHeatmapWeeks(currentYear);
+
+
+---
+
+<BaseLayout title="一心 - 记录日常，整理思想，长期写作。" description="一个用于记录生活、阅读、技术和思考的个人博客。">
+  <div class="home">
+    <div class="site-header">
+      <h1 class="site-title">一心</h1>
+      <p class="site-description">记录日常，整理思想，长期写作。</p>
+    </div>
+
+    <div class="heatmap-section">
+      <h2 class="section-title">📊 年度发文统计</h2>
+      <div class="heatmap-container">
+        <div class="heatmap-grid">
+          {weeks.map((week) => (
+            <div class="heatmap-column">
+              {week.map((day) => {
+                if (!day) {
+                  return <div class="heatmap-day empty"></div>;
+                }
+                const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+                const count = heatmapData[dateStr] || 0;
+                return (
+                  <div 
+                    class="heatmap-day" 
+                    style={{ backgroundColor: getColorIntensity(count) }}
+                    title={`${day.getMonth() + 1}/${day.getDate()}: ${count}篇`}
+                  ></div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div class="heatmap-legend">
+          <span class="legend-label">少</span>
+          {['#ebedf0', '#c6e48b', '#7bc96f', '#239a3b', '#196127'].map((color) => (
+            <div class="legend-block" style={{ backgroundColor: color }}></div>
+          ))}
+          <span class="legend-label">多</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-nav">
+      <h2 class="section-title">📚 专栏导航</h2>
+      <div class="nav-grid">
+        <a href="/columns/随笔生活" class="nav-item life">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>随笔生活</span>
+        </a>
+        <a href="/columns/技术笔记" class="nav-item tech">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="1" width="22" height="15" rx="2" ry="2"></rect>
+            <line x1="1" y1="21" x2="23" y2="21"></line>
+            <line x1="8" y1="21" x2="8" y2="15"></line>
+            <line x1="16" y1="21" x2="16" y2="15"></line>
+          </svg>
+          <span>技术笔记</span>
+        </a>
+        <a href="/columns/工具收藏" class="nav-item tools">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22.7 19l-9.1-9.1a4 4 0 0 0-5.6 5.6l9.1 9.1a4 4 0 0 0 5.6-5.6z"></path>
+            <polyline points="16.3 7.7 14 5.4 9.6 9.6 11.9 12.1"></polyline>
+          </svg>
+          <span>工具收藏</span>
+        </a>
+        <a href="/columns/读书笔记" class="nav-item books">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <span>读书笔记</span>
+        </a>
+        <a href="/categories" class="nav-item graph">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+          <span>全部专栏</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="posts-section">
+      <h2 class="section-title">📝 最新文章</h2>
+      <div class="posts-list">
+        {sortedPosts.map((post) => {
+          const date = new Date(post.data.date);
+          const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          
+          return (
+            <article class="post-item">
+              <div class="post-header">
+                <time class="post-date">{formattedDate}</time>
+                {post.data.category && (
+                  <span class="post-category">{post.data.category}</span>
+                )}
+              </div>
+              <h2 class="post-title">
+                <a href={`/posts/${post.slug}`}>{post.data.title}</a>
+              </h2>
+              <p class="post-summary">{post.data.summary}</p>
+              <div class="post-footer">
+                <div class="post-tags">
+                  {post.data.tags.map((tag) => (
+                    <span class="tag">#{tag}</span>
+                  ))}
+                </div>
+                <a href={`/posts/${post.slug}`} class="read-more">阅读全文 →</a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+
+    <div class="subscribe-prompt">
+      <p>
+        订阅 <a href="/atom.xml">RSS</a> 获取最新更新。
+      </p>
+    </div>
+  </div>
+
+  <style>
+    .home {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 3rem;
+    }
+
+    .site-header {
+      margin-bottom: 2rem;
+      text-align: left;
+      padding: 1rem 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+    }
+
+    .site-title {
+      margin: 0 0 0.75rem;
+      font-size: 2.8em;
+      font-weight: 700;
+      color: #1A1A1A;
+      letter-spacing: -0.02em;
+    }
+
+    .site-description {
+      margin: 0;
+      color: #555555;
+      font-size: 1.15em;
+      line-height: 1.7;
+    }
+
+    .section-wrapper {
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      margin: 0 0 1.25rem;
+      font-size: 1.15em;
+      font-weight: 600;
+      color: #333333;
+      padding-left: 0.75rem;
+      border-left: 3px solid #0066CC;
+    }
+
+    .heatmap-section {
+      padding: 1.5rem 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+    }
+
+    .heatmap-container {
+      margin-top: 1rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .heatmap-grid {
+      display: flex;
+      gap: 4px;
+    }
+
+    .heatmap-column {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .heatmap-day {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    .heatmap-day:hover {
+      opacity: 0.8;
+    }
+
+    .heatmap-day.empty {
+      background: transparent;
+    }
+
+    .heatmap-legend {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      gap: 6px;
+    }
+
+    .legend-label {
+      font-size: 11px;
+      color: #999999;
+    }
+
+    .legend-block {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+      background: transparent;
+      border-radius: 0;
+      text-decoration: none;
+      transition: all 0.25s ease;
+    }
+
+    .nav-item:hover {
+      background: transparent;
+      transform: none;
+    }
+
+    .nav-item svg {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 0.75rem;
+      opacity: 0.85;
+    }
+
+    .nav-item span {
+      font-size: 0.9em;
+      font-weight: 500;
+      color: #333333;
+    }
+
+    .nav-item.life svg, .nav-item.life span { color: #E53E3E; }
+    .nav-item.tech svg, .nav-item.tech span { color: #3182CE; }
+    .nav-item.tools svg, .nav-item.tools span { color: #D69E2E; }
+    .nav-item.books svg, .nav-item.books span { color: #38B2AC; }
+    .nav-item.graph svg, .nav-item.graph span { color: #805AD5; }
+
+    .posts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .post-item {
+      background: transparent;
+      border-radius: 0;
+      padding: 1.75rem 0;
+      box-shadow: none;
+      border: none;
+      border-bottom: 1px solid #E8E8E8;
+      transition: all 0.2s ease;
+    }
+
+    .post-item:hover {
+      box-shadow: none;
+      transform: none;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .post-date {
+      display: inline-flex;
+      color: #888888;
+      font-size: 0.85em;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .post-category {
+      display: inline-flex;
+      font-size: 0.85em;
+      padding: 0;
+      background: transparent;
+      color: #0066CC;
+      border-radius: 0;
+      font-weight: 500;
+    }
+
+    .post-title {
+      margin: 0 0 0.75rem;
+      font-size: 1.35em;
+      font-weight: 600;
+    }
+
+    .post-title a {
+      color: #1A1A1A;
+      text-decoration: none;
+    }
+
+    .post-title a:hover {
+      color: #0066CC;
+    }
+
+    .post-summary {
+      margin: 0 0 1.25rem;
+      color: #555555;
+      line-height: 1.8;
+      font-size: 0.95em;
+    }
+
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .post-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      color: #666666;
+      font-size: 0.825em;
+      opacity: 0.85;
+    }
+
+    .read-more {
+      color: #0066CC;
+      font-size: 0.875em;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+      transition: all 0.2s ease;
+    }
+
+    .read-more:hover {
+      background: transparent;
+    }
+
+    .subscribe-prompt {
+      padding: 2rem 0;
+      background: transparent;
+      border-radius: 0;
+      text-align: center;
+      border: none;
+    }
+
+    .subscribe-prompt p {
+      margin: 0;
+      color: #444444;
+      font-size: 0.95em;
+    }
+
+    .subscribe-prompt a {
+      color: #0066CC;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .home {
+        padding: 2rem 1rem;
+      }
+      
+      .site-header {
+        padding: 1.5rem;
+      }
+      
+      .site-title {
+        font-size: 2.2em;
+      }
+      
+      .nav-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .nav-item {
+        padding: 1.25rem 0.75rem;
+      }
+      
+      .nav-item span {
+        font-size: 0.85em;
+      }
+      
+      .post-item {
+        padding: 1.25rem;
+      }
+      
+      .post-title {
+        font-size: 1.2em;
+      }
+      
+      .post-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</BaseLayout>

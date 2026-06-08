@@ -1,0 +1,105 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('posts');
+const publishedPosts = posts.filter((post) => !post.data.draft);
+const sortedPosts = publishedPosts.sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const groupedPosts = sortedPosts.reduce((acc, post) => {
+  const year = new Date(post.data.date).getFullYear();
+  if (!acc[year]) {
+    acc[year] = [];
+  }
+  acc[year].push(post);
+  return acc;
+}, {} as Record<number, typeof sortedPosts>);
+---
+
+<BaseLayout title="归档 - 一心" description="文章归档">
+  <div class="archive">
+    <div class="page-header">
+      <h1>归档</h1>
+    </div>
+    
+    {Object.entries(groupedPosts)
+      .sort(([a], [b]) => Number(b) - Number(a))
+      .map(([year, posts]) => (
+        <div class="year-group">
+          <h2 class="year">{year}</h2>
+          <ul class="posts-by-year">
+            {posts.map((post) => {
+              const date = new Date(post.data.date);
+              const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+              
+              return (
+                <li class="archive-item">
+                  <time class="archive-date">{formattedDate}</time>
+                  <a href={`/posts/${post.slug}`} class="archive-title">{post.data.title}</a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: 2rem;
+      padding: 1.5rem 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #2D2D2D;
+      letter-spacing: -0.01em;
+    }
+
+    .year-group {
+      margin-bottom: 2.5rem;
+    }
+
+    .year {
+      margin: 0 0 1rem;
+      font-size: 1.4em;
+      color: #222222;
+      border-bottom: 1px solid #E5E5E5;
+      padding-bottom: 0.5rem;
+    }
+
+    .posts-by-year {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .archive-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      align-items: baseline;
+    }
+
+    .archive-date {
+      color: #999999;
+      font-size: 0.85em;
+      min-width: 60px;
+      flex-shrink: 0;
+    }
+
+    .archive-title {
+      color: #222222;
+      font-size: 0.95em;
+    }
+
+    .archive-title:hover {
+      color: #005BBB;
+      text-decoration: none;
+    }
+  </style>
+</BaseLayout>

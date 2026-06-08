@@ -1,0 +1,394 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const publishedPosts = posts.filter((post) => !post.data.draft);
+  
+  return publishedPosts.map((post) => ({
+    params: { slug: post.slug },
+  }));
+}
+
+const slug = Astro.params.slug;
+const posts = await getCollection('posts');
+const post = posts.find((p) => p.slug === slug && !p.data.draft);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const { Content } = await post.render();
+
+const allPosts = posts.filter((p) => p.data.draft !== true);
+const sortedPosts = allPosts.sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+const currentIndex = sortedPosts.findIndex((p) => p.slug === slug);
+
+const prevPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
+const nextPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
+
+function formatDate(date: Date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+---
+
+<BaseLayout title={`${post.data.title} - 一心`} description={post.data.summary}>
+  <article class="post">
+    <header class="post-header">
+      <h1>{post.data.title}</h1>
+      <div class="post-meta">
+        <time class="post-date">发布于 {formatDate(post.data.date)}</time>
+        {post.data.updated && post.data.updated.getTime() !== post.data.date.getTime() && (
+          <time class="post-updated">更新于 {formatDate(post.data.updated)}</time>
+        )}
+        {post.data.category && (
+          <div class="post-category">
+            <a href={`/categories/${post.data.category}`} class="category">{post.data.category}</a>
+          </div>
+        )}
+        <div class="post-tags">
+          {post.data.tags.map((tag) => (
+            <a href={`/tags/${tag}`} class="tag">#{tag}</a>
+          ))}
+        </div>
+      </div>
+    </header>
+
+    <div class="post-content">
+      <Content />
+    </div>
+
+    <div class="post-nav">
+      <div class="nav-item prev">
+        {prevPost && (
+          <a href={`/posts/${prevPost.slug}`}>
+            <span class="nav-label">上一篇</span>
+            <span class="nav-title">{prevPost.data.title}</span>
+          </a>
+        )}
+      </div>
+      <div class="nav-item next">
+        {nextPost && (
+          <a href={`/posts/${nextPost.slug}`}>
+            <span class="nav-label">下一篇</span>
+            <span class="nav-title">{nextPost.data.title}</span>
+          </a>
+        )}
+      </div>
+    </div>
+
+    <div class="subscribe-prompt">
+      <p>订阅 <a href="/atom.xml">RSS</a> 获取最新更新。</p>
+    </div>
+  </article>
+
+  <style>
+    .post-header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #E5E5E5;
+    }
+
+    h1 {
+      margin: 0 0 1.25rem;
+      font-size: 2em;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .post-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      color: #666666;
+      font-size: 0.9em;
+    }
+
+    .post-date, .post-updated {
+      display: block;
+    }
+
+    .post-category {
+      margin-top: 0.25rem;
+    }
+
+    .category {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      background-color: #E8F4FD;
+      color: #005BBB;
+      font-size: 0.85em;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .category:hover {
+      background-color: #D4EAFD;
+      text-decoration: none;
+    }
+
+    .post-tags {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.6rem;
+      background-color: #F5F5F5;
+      color: #555555;
+      font-size: 0.85em;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+
+    .tag:hover {
+      background-color: #E5E5E5;
+      color: #005BBB;
+      text-decoration: none;
+    }
+
+    .post-content {
+      margin-bottom: 3rem;
+      color: #333333;
+    }
+
+    .post-content h2 {
+      margin-top: 2.25rem;
+      margin-bottom: 1rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #E5E5E5;
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .post-content h3 {
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .post-content h4 {
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.15em;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .post-content p {
+      margin-bottom: 1.25em;
+      line-height: 1.85;
+      text-align: justify;
+    }
+
+    .post-content ul,
+    .post-content ol {
+      margin-bottom: 1.25em;
+      padding-left: 1.75em;
+    }
+
+    .post-content li {
+      margin-bottom: 0.5em;
+      line-height: 1.75;
+    }
+
+    .post-content blockquote {
+      margin: 1.75em 0;
+      padding: 1rem 1.25rem;
+      border-left: 4px solid #005BBB;
+      background-color: #F8F9FA;
+      color: #555555;
+      font-style: normal;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .post-content blockquote p {
+      margin-bottom: 0.75em;
+    }
+
+    .post-content blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    .post-content code {
+      padding: 0.2em 0.4em;
+      background-color: #F5F5F5;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+      font-size: 0.875em;
+      color: #C7254E;
+    }
+
+    .post-content pre {
+      margin: 1.75em 0;
+      padding: 1.25rem;
+      background-color: #1A1A2E;
+      color: #E4E4E4;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85em;
+    }
+
+    .post-content pre code {
+      padding: 0;
+      background-color: transparent;
+      color: inherit;
+    }
+
+    .post-content hr {
+      margin: 2.5em 0;
+      border: none;
+      border-top: 1px solid #E5E5E5;
+    }
+
+    .post-content img {
+      display: block;
+      margin: 2rem auto;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .post-content a {
+      color: #005BBB;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .post-content a:hover {
+      border-bottom-color: #005BBB;
+      text-decoration: none;
+    }
+
+    .post-content strong {
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .post-content em {
+      font-style: italic;
+    }
+
+    .post-content table {
+      width: 100%;
+      margin: 1.75em 0;
+      border-collapse: collapse;
+      font-size: 0.9em;
+      background-color: #FFFFFF;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .post-content th,
+    .post-content td {
+      padding: 0.75em 1em;
+      border-bottom: 1px solid #E5E5E5;
+      text-align: left;
+    }
+
+    .post-content th {
+      background-color: #F8F9FA;
+      font-weight: 600;
+      color: #222222;
+    }
+
+    .post-content tr:last-child td {
+      border-bottom: none;
+    }
+
+    .post-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.75rem 0;
+      border-top: 1px solid #E5E5E5;
+      border-bottom: 1px solid #E5E5E5;
+      margin-bottom: 2rem;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-item a {
+      display: flex;
+      flex-direction: column;
+      color: #222222;
+      transition: color 0.2s ease;
+    }
+
+    .nav-item a:hover {
+      color: #005BBB;
+      text-decoration: none;
+    }
+
+    .nav-label {
+      color: #999999;
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+    }
+
+    .nav-title {
+      font-size: 0.95em;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .subscribe-prompt {
+      padding: 1.75rem;
+      background-color: #FFFFFF;
+      border: 1px solid #E5E5E5;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .subscribe-prompt p {
+      margin: 0;
+      color: #666666;
+      font-size: 0.9em;
+    }
+
+    @media (min-width: 768px) {
+      h1 {
+        font-size: 2.25em;
+      }
+
+      .post-content h2 {
+        font-size: 1.6em;
+      }
+
+      .post-nav {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .nav-item {
+        width: calc(50% - 1rem);
+      }
+
+      .nav-item.next {
+        align-items: flex-end;
+        text-align: right;
+      }
+    }
+  </style>
+</BaseLayout>

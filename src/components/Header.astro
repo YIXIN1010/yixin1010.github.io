@@ -1,0 +1,50 @@
+---
+const navItems = [
+  { label: '首页', href: '/' },
+  { label: '归档', href: '/archive' },
+  { label: '专栏', href: '/categories' },
+  { label: '图谱', href: '/graph' },
+  { label: '标签', href: '/tags' },
+  { label: '关于', href: '/about' },
+  { label: '订阅', href: '/subscribe' },
+];
+---
+
+<header>
+  <nav>
+    <div class="nav-links">
+      {navItems.map((item) => (
+        <a href={item.href} class="nav-link">{item.label}</a>
+      ))}
+    </div>
+  </nav>
+  <style>
+    header {
+      padding: 1rem 0;
+      border-bottom: 1px solid #E5E5E5;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      color: #666666;
+      font-size: 0.9em;
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: #222222;
+      text-decoration: none;
+    }
+
+    @media (min-width: 768px) {
+      header {
+        padding: 1.5rem 0;
+      }
+    }
+  </style>
+</header>
