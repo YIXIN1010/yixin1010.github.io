@@ -54,6 +54,9 @@ const totalPages = Math.ceil(possessions.length / ITEMS_PER_PAGE);
               alt={item.title} 
               class="possession-image"
               loading="lazy"
+              decoding="async"
+              width="450"
+              height="600"
               onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=450&h=600&fit=crop'; this.onerror=null;"
             />
           </div>
@@ -119,6 +122,9 @@ const totalPages = Math.ceil(possessions.length / ITEMS_PER_PAGE);
             alt="${item.title}" 
             class="possession-image" 
             loading="lazy"
+            decoding="async"
+            width="450"
+            height="600"
             onerror="this.src='${FALLBACK_IMAGE}'; this.onerror=null;"
           />
         </div>
