@@ -24,7 +24,7 @@ const possessions = [
   },
   {
     id: 4,
-    title: '粗普',
+    title: '粗朴',
     description: '喝茶偶尔也需要仪式感，粗普的柴烧是我喜欢的调调。',
     imageUrl: '/assets/粗朴.jpg'
   },
@@ -49,16 +49,19 @@ const totalPages = Math.ceil(possessions.length / ITEMS_PER_PAGE);
       {possessions.slice(0, ITEMS_PER_PAGE).map((item) => (
         <article class="possession-card" key={item.id}>
           <div class="possession-image-wrapper">
-            <img 
-              src={item.imageUrl} 
-              alt={item.title} 
-              class="possession-image"
-              loading="lazy"
-              decoding="async"
-              width="450"
-              height="600"
-              onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=450&h=600&fit=crop'; this.onerror=null;"
-            />
+            <picture>
+              <source srcset={item.imageUrl.replace('.jpg', '.webp')} type="image/webp" />
+              <img 
+                src={item.imageUrl} 
+                alt={item.title} 
+                class="possession-image"
+                loading="lazy"
+                decoding="async"
+                width="450"
+                height="600"
+                onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=450&h=600&fit=crop'; this.onerror=null;"
+              />
+            </picture>
           </div>
           <div class="possession-content">
             <h2 class="possession-title">{item.title}</h2>
@@ -114,26 +117,32 @@ const totalPages = Math.ceil(possessions.length / ITEMS_PER_PAGE);
     const end = start + itemsPerPage;
     const currentItems = possessions.slice(start, end);
     
-    grid.innerHTML = currentItems.map(item => `
-      <article class="possession-card" key="${item.id}">
-        <div class="possession-image-wrapper">
-          <img 
-            src="${item.imageUrl}" 
-            alt="${item.title}" 
-            class="possession-image" 
-            loading="lazy"
-            decoding="async"
-            width="450"
-            height="600"
-            onerror="this.src='${FALLBACK_IMAGE}'; this.onerror=null;"
-          />
-        </div>
-        <div class="possession-content">
-          <h2 class="possession-title">${item.title}</h2>
-          <p class="possession-description">${item.description}</p>
-        </div>
-      </article>
-    `).join('');
+    grid.innerHTML = currentItems.map(item => {
+      const webpUrl = item.imageUrl.replace('.jpg', '.webp');
+      return `
+        <article class="possession-card" key="${item.id}">
+          <div class="possession-image-wrapper">
+            <picture>
+              <source srcset="${webpUrl}" type="image/webp" />
+              <img 
+                src="${item.imageUrl}" 
+                alt="${item.title}" 
+                class="possession-image" 
+                loading="lazy"
+                decoding="async"
+                width="450"
+                height="600"
+                onerror="this.src='${FALLBACK_IMAGE}'; this.onerror=null;"
+              />
+            </picture>
+          </div>
+          <div class="possession-content">
+            <h2 class="possession-title">${item.title}</h2>
+            <p class="possession-description">${item.description}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
     
     pageText.textContent = '第 ' + page + ' 页 / 共 ' + totalPages + ' 页';
     prevBtn.disabled = page === 1;
