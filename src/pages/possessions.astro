@@ -1,0 +1,295 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const ITEMS_PER_PAGE = 6;
+
+const possessions = [
+  {
+    id: 1,
+    title: '备前烧花瓶',
+    description: '抖音偶得油画一幅，画内画外的花瓶皆为同一产地，有趣。',
+    imageUrl: '/assets/花瓶.jpg'
+  },
+  {
+    id: 2,
+    title: '百合',
+    description: '有花如此，人间幸事。我欣赏你的绽放，也记得枯萎的样子',
+    imageUrl: '/assets/百合.jpg'
+  },
+  {
+    id: 3,
+    title: '茶香炉',
+    description: '前几日不小心摔了，有些破损和裂缝，在彻底消失之前，残缺也挺好。',
+    imageUrl: '/assets/茶香炉.jpg'
+  },
+  {
+    id: 4,
+    title: '粗普',
+    description: '喝茶偶尔也需要仪式感，粗普的柴烧是我喜欢的调调。',
+    imageUrl: '/assets/粗朴.jpg'
+  },
+  {
+    id: 5,
+    title: '望蓝',
+    description: '就是好看，你的出现愉悦了我',
+    imageUrl: '/assets/望蓝.jpg'
+  }
+];
+
+const totalPages = Math.ceil(possessions.length / ITEMS_PER_PAGE);
+---
+
+<BaseLayout title="身外之物 - 一心博客" description="记录生活中那些陪伴我的小物件">
+  <div class="possessions-page">
+    <div class="page-header">
+      <h1>身外之物</h1>
+    </div>
+
+    <div class="possessions-grid" id="possessionsGrid">
+      {possessions.slice(0, ITEMS_PER_PAGE).map((item) => (
+        <article class="possession-card" key={item.id}>
+          <div class="possession-image-wrapper">
+            <img 
+              src={item.imageUrl} 
+              alt={item.title} 
+              class="possession-image"
+              loading="lazy"
+              onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=450&h=600&fit=crop'; this.onerror=null;"
+            />
+          </div>
+          <div class="possession-content">
+            <h2 class="possession-title">{item.title}</h2>
+            <p class="possession-description">{item.description}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info">
+        共 {possessions.length} 件物品
+      </div>
+      <div class="pagination-nav">
+        <button 
+          class="pagination-btn" 
+          id="prevBtn" 
+          disabled
+        >
+          上一页
+        </button>
+        <span class="pagination-current" id="currentPageText">
+          第 1 页 / 共 {totalPages} 页
+        </span>
+        <button 
+          class="pagination-btn" 
+          id="nextBtn"
+        >
+          下一页
+        </button>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <p>每一件物品都有它的故事，等待被发现...</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ possessions, ITEMS_PER_PAGE, totalPages }}>
+  const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=450&h=600&fit=crop';
+  
+  let currentPage = 1;
+  const itemsPerPage = ITEMS_PER_PAGE;
+  
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const pageText = document.getElementById('currentPageText');
+  const grid = document.getElementById('possessionsGrid');
+
+  function renderPage(page) {
+    const start = (page - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const currentItems = possessions.slice(start, end);
+    
+    grid.innerHTML = currentItems.map(item => `
+      <article class="possession-card" key="${item.id}">
+        <div class="possession-image-wrapper">
+          <img 
+            src="${item.imageUrl}" 
+            alt="${item.title}" 
+            class="possession-image" 
+            loading="lazy"
+            onerror="this.src='${FALLBACK_IMAGE}'; this.onerror=null;"
+          />
+        </div>
+        <div class="possession-content">
+          <h2 class="possession-title">${item.title}</h2>
+          <p class="possession-description">${item.description}</p>
+        </div>
+      </article>
+    `).join('');
+    
+    pageText.textContent = '第 ' + page + ' 页 / 共 ' + totalPages + ' 页';
+    prevBtn.disabled = page === 1;
+    nextBtn.disabled = page === totalPages;
+  }
+
+  prevBtn.addEventListener('click', function() {
+    if (currentPage > 1) {
+      currentPage--;
+      renderPage(currentPage);
+    }
+  });
+
+  nextBtn.addEventListener('click', function() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderPage(currentPage);
+    }
+  });
+</script>
+
+<style>
+  .page-header {
+    margin-bottom: 2rem;
+    padding: 1.5rem 0;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2D2D2D;
+    letter-spacing: -0.01em;
+  }
+
+  .possessions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 640px) {
+    .possessions-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .possessions-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .possession-card {
+    background: var(--card-bg, #fff);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .possession-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .possession-image-wrapper {
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: #f5f5f5;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .possession-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s;
+    display: block;
+  }
+
+  .possession-card:hover .possession-image {
+    transform: scale(1.05);
+  }
+
+  .possession-content {
+    padding: 0.25rem 1rem 0.75rem;
+  }
+
+  .possession-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .possession-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--card-bg, #fff);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .pagination-nav {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    background: var(--card-bg, #fff);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: var(--accent-color, #f0f0f0);
+    border-color: var(--accent-color, #ccc);
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pagination-current {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .page-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color, #eee);
+    color: var(--text-secondary);
+  }
+</style>
