@@ -1,0 +1,261 @@
+<!DOCTYPE html><html lang="zh-CN" data-astro-cid-37fxchfa> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="文章关联网络，类似 Obsidian 的双链图谱"><meta property="og:title" content="知识图谱 - 一心博客"><meta property="og:description" content="文章关联网络，类似 Obsidian 的双链图谱"><meta property="og:type" content="website"><link rel="alternate" type="application/atom+xml" href="/atom.xml" title="一心"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><title>知识图谱 - 一心博客</title><link rel="stylesheet" href="/_astro/about.B08JrlRd.css">
+<style>.graph-page[data-astro-cid-oy34yelw]{padding:1rem 0}.page-header[data-astro-cid-oy34yelw]{margin-bottom:2rem;padding:1.5rem 0}h1[data-astro-cid-oy34yelw]{margin:0;font-size:1.8em;font-weight:700;color:#2d2d2d;letter-spacing:-.01em}.graph-container[data-astro-cid-oy34yelw]{background:transparent;border-radius:0;box-shadow:none;padding:0;margin-bottom:2rem}.graph-controls[data-astro-cid-oy34yelw]{display:flex;gap:.75rem;margin-bottom:1rem}.control-btn[data-astro-cid-oy34yelw]{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;background:#f5f5f5;border:1px solid #E5E5E5;border-radius:6px;cursor:pointer;font-size:.875rem;transition:all .2s;color:#333}.control-btn[data-astro-cid-oy34yelw]:hover{background:#e8e8e8}.control-btn[data-astro-cid-oy34yelw] svg[data-astro-cid-oy34yelw]{width:18px;height:18px}.graph-wrapper[data-astro-cid-oy34yelw]{width:100%;height:600px;overflow:hidden;cursor:grab;background:#fafaf7;border-radius:12px;border:1px solid #E5E5E5}.graph-wrapper[data-astro-cid-oy34yelw]:active{cursor:grabbing}#graph-svg[data-astro-cid-oy34yelw]{width:100%;height:100%;display:block}.edge[data-astro-cid-oy34yelw]{stroke:#999;stroke-width:1.5;stroke-opacity:.5}.node[data-astro-cid-oy34yelw]{fill:#06c;stroke:#005bbb;stroke-width:2;cursor:grab;transition:fill .2s,stroke .2s,transform .2s}.node[data-astro-cid-oy34yelw]:hover{fill:#005bbb;stroke:#004d99}.node[data-astro-cid-oy34yelw].dangling{fill:#999;stroke:#666;stroke-dasharray:4,2}.node[data-astro-cid-oy34yelw].dangling:hover{fill:#888;stroke:#555}.node-label[data-astro-cid-oy34yelw]{fill:#333;font-size:11px;pointer-events:none;user-select:none;font-weight:500}.node-label[data-astro-cid-oy34yelw].dangling{fill:#999;font-style:italic}.legend[data-astro-cid-oy34yelw]{margin-top:1rem;padding-top:1rem;border-top:1px solid #E5E5E5}.legend[data-astro-cid-oy34yelw] h3[data-astro-cid-oy34yelw]{font-size:.875rem;color:#666;margin-bottom:.75rem}.legend-items[data-astro-cid-oy34yelw]{display:flex;gap:2rem}.legend-item[data-astro-cid-oy34yelw]{display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:#666}.legend-node[data-astro-cid-oy34yelw]{width:14px;height:14px;border-radius:50%;background:#06c;border:2px solid #005BBB}.legend-node[data-astro-cid-oy34yelw].dangling{background:#999;border:2px dashed #666}.legend-edge[data-astro-cid-oy34yelw]{width:30px;height:2px;background:#999}.stats-section[data-astro-cid-oy34yelw]{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}.stat-card[data-astro-cid-oy34yelw]{background:transparent;border-radius:0;padding:1.5rem 0;text-align:left;box-shadow:none;border-bottom:1px solid #E5E5E5}.stat-number[data-astro-cid-oy34yelw]{font-size:2.5rem;font-weight:700;color:#06c;margin-bottom:.25rem}.stat-label[data-astro-cid-oy34yelw]{font-size:.875rem;color:#666}@media (max-width: 768px){.stats-section[data-astro-cid-oy34yelw]{grid-template-columns:1fr}.graph-wrapper[data-astro-cid-oy34yelw]{height:400px}.graph-controls[data-astro-cid-oy34yelw]{gap:.5rem}.control-btn[data-astro-cid-oy34yelw]{padding:.4rem .75rem;font-size:.8rem}}
+</style></head> <body data-astro-cid-37fxchfa> <div class="container" data-astro-cid-37fxchfa> <header data-astro-cid-3ef6ksr2> <nav data-astro-cid-3ef6ksr2> <div class="nav-links" data-astro-cid-3ef6ksr2> <a href="/" class="nav-link" data-astro-cid-3ef6ksr2>首页</a><a href="/about" class="nav-link" data-astro-cid-3ef6ksr2>作者</a><a href="/archive" class="nav-link" data-astro-cid-3ef6ksr2>归档</a><a href="/categories" class="nav-link" data-astro-cid-3ef6ksr2>专栏</a><a href="/graph" class="nav-link" data-astro-cid-3ef6ksr2>图谱</a><a href="/tags" class="nav-link" data-astro-cid-3ef6ksr2>标签</a> </div> </nav>  </header> <main data-astro-cid-37fxchfa> <div class="graph-page" data-astro-cid-oy34yelw> <div class="page-header" data-astro-cid-oy34yelw> <h1 data-astro-cid-oy34yelw>知识图谱</h1> </div> <div class="graph-container" data-astro-cid-oy34yelw> <div class="graph-controls" data-astro-cid-oy34yelw> <button id="reset-btn" class="control-btn" data-astro-cid-oy34yelw> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-astro-cid-oy34yelw> <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" data-astro-cid-oy34yelw></path> <path d="M21 3v5h-5" data-astro-cid-oy34yelw></path> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" data-astro-cid-oy34yelw></path> <path d="M8 16H3v5" data-astro-cid-oy34yelw></path> </svg>
+重置视图
+</button> <button id="zoom-in-btn" class="control-btn" data-astro-cid-oy34yelw> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-astro-cid-oy34yelw> <line x1="12" y1="5" x2="12" y2="19" data-astro-cid-oy34yelw></line> <line x1="5" y1="12" x2="19" y2="12" data-astro-cid-oy34yelw></line> </svg>
+放大
+</button> <button id="zoom-out-btn" class="control-btn" data-astro-cid-oy34yelw> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" data-astro-cid-oy34yelw> <line x1="5" y1="12" x2="19" y2="12" data-astro-cid-oy34yelw></line> </svg>
+缩小
+</button> </div> <div class="graph-wrapper" data-astro-cid-oy34yelw> <svg id="graph-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet" data-astro-cid-oy34yelw> <defs data-astro-cid-oy34yelw> <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" data-astro-cid-oy34yelw> <polygon points="0 0, 10 3.5, 0 7" fill="#999" data-astro-cid-oy34yelw></polygon> </marker> <filter id="glow" data-astro-cid-oy34yelw> <feGaussianBlur stdDeviation="2" result="coloredBlur" data-astro-cid-oy34yelw></feGaussianBlur> <feMerge data-astro-cid-oy34yelw> <feMergeNode in="coloredBlur" data-astro-cid-oy34yelw></feMergeNode> <feMergeNode in="SourceGraphic" data-astro-cid-oy34yelw></feMergeNode> </feMerge> </filter> </defs> <g class="edges" data-astro-cid-oy34yelw> <line class="edge" data-source="website" data-target="vibecoding" x1="655.6050451639218" y1="113.0834183755363" x2="282.57823296276945" y2="247.94865915944962" data-astro-cid-oy34yelw></line> </g> <g class="nodes" data-astro-cid-oy34yelw> <g class="node-group" data-node-id="website" data-astro-cid-oy34yelw> <circle class="node " r="11" cx="655.6050451639218" cy="113.0834183755363" filter="url(#glow)" data-astro-cid-oy34yelw></circle> <text class="node-label " x="655.6050451639218" y="140.0834183755363" text-anchor="middle" data-astro-cid-oy34yelw> VibeCoding... </text> </g><g class="node-group" data-node-id="markdown-guide" data-astro-cid-oy34yelw> <circle class="node " r="14" cx="495.0146654218547" cy="226.4714688331464" filter="url(#glow)" data-astro-cid-oy34yelw></circle> <text class="node-label " x="495.0146654218547" y="256.4714688331464" text-anchor="middle" data-astro-cid-oy34yelw> Markdown 语... </text> </g><g class="node-group" data-node-id="vibecoding" data-astro-cid-oy34yelw> <circle class="node dangling" r="8" cx="282.57823296276945" cy="247.94865915944962" filter="url(#glow)" data-astro-cid-oy34yelw></circle> <text class="node-label dangling" x="282.57823296276945" y="271.9486591594496" text-anchor="middle" data-astro-cid-oy34yelw> vibecoding </text> </g> </g> </svg> </div> <div class="legend" data-astro-cid-oy34yelw> <h3 data-astro-cid-oy34yelw>图例</h3> <div class="legend-items" data-astro-cid-oy34yelw> <div class="legend-item" data-astro-cid-oy34yelw> <div class="legend-node" data-astro-cid-oy34yelw></div> <span data-astro-cid-oy34yelw>文章节点</span> </div> <div class="legend-item" data-astro-cid-oy34yelw> <div class="legend-node dangling" data-astro-cid-oy34yelw></div> <span data-astro-cid-oy34yelw>悬空节点</span> </div> <div class="legend-item" data-astro-cid-oy34yelw> <div class="legend-edge" data-astro-cid-oy34yelw></div> <span data-astro-cid-oy34yelw>关联关系</span> </div> </div> </div> </div> <div class="stats-section" data-astro-cid-oy34yelw> <div class="stat-card" data-astro-cid-oy34yelw> <div class="stat-number" data-astro-cid-oy34yelw>3</div> <div class="stat-label" data-astro-cid-oy34yelw>文章节点</div> </div> <div class="stat-card" data-astro-cid-oy34yelw> <div class="stat-number" data-astro-cid-oy34yelw>1</div> <div class="stat-label" data-astro-cid-oy34yelw>关联边</div> </div> </div> </div>  <script>(function(){const nodes = [{"id":"website","title":"VibeCoding相关网站","slug":"website","x":655.6050451639218,"y":113.0834183755363,"vx":0,"vy":0,"tags":["VibeCoding"],"size":22,"fixed":false,"isDangling":false},{"id":"markdown-guide","title":"Markdown 语法完全指南","slug":"markdown-guide","x":495.0146654218547,"y":226.4714688331464,"vx":0,"vy":0,"tags":["Markdown","写作","教程","语法"],"size":28,"fixed":false,"isDangling":false},{"id":"vibecoding","title":"vibecoding","slug":"","x":282.57823296276945,"y":247.94865915944962,"vx":0,"vy":0,"tags":[],"size":16,"fixed":false,"isDangling":true}];
+const edges = [{"source":"website","target":"vibecoding"}];
+
+  const svg = document.getElementById('graph-svg');
+  const container = document.querySelector('.graph-wrapper');
+
+  const nodeElements = document.querySelectorAll('.node-group');
+  const edgeElements = document.querySelectorAll('.edge');
+
+  const width = 800;
+  const height = 600;
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let draggingNode = null;
+  let dragOffset = { x: 0, y: 0 };
+  let isDraggingCanvas = false;
+  let dragStart = { x: 0, y: 0 };
+  let dragStartTransform = { x: 0, y: 0 };
+
+  function updatePositions() {
+    const nodeMap = new Map();
+    nodeElements.forEach((el) => {
+      const id = el.getAttribute('data-node-id');
+      const node = nodes.find(n => n.id === id);
+      if (node) {
+        nodeMap.set(id, node);
+        const circle = el.querySelector('.node');
+        const text = el.querySelector('.node-label');
+        circle.setAttribute('cx', node.x);
+        circle.setAttribute('cy', node.y);
+        text.setAttribute('x', node.x);
+        text.setAttribute('y', node.y + node.size / 2 + 16);
+      }
+    });
+
+    edgeElements.forEach((el) => {
+      const sourceId = el.getAttribute('data-source');
+      const targetId = el.getAttribute('data-target');
+      const source = nodeMap.get(sourceId);
+      const target = nodeMap.get(targetId);
+      if (source && target) {
+        el.setAttribute('x1', source.x);
+        el.setAttribute('y1', source.y);
+        el.setAttribute('x2', target.x);
+        el.setAttribute('y2', target.y);
+      }
+    });
+  }
+
+  function applyForces() {
+    if (draggingNode) return;
+
+    const repulsion = 500;
+    const attraction = 0.1;
+    const damping = 0.95;
+    const gravity = 0.01;
+
+    nodes.forEach((node) => {
+      if (node.fixed) return;
+      node.vx += (centerX - node.x) * gravity;
+      node.vy += (centerY - node.y) * gravity;
+    });
+
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].fixed) continue;
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (nodes[j].fixed) continue;
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        const force = repulsion / (dist * dist);
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        nodes[i].vx -= fx;
+        nodes[i].vy -= fy;
+        nodes[j].vx += fx;
+        nodes[j].vy += fy;
+      }
+    }
+
+    edges.forEach((edge) => {
+      const source = nodes.find(n => n.id === edge.source);
+      const target = nodes.find(n => n.id === edge.target);
+
+      if (source && target) {
+        const dx = target.x - source.x;
+        const dy = target.y - source.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const desiredDist = 120;
+
+        const force = (dist - desiredDist) * attraction;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+
+        if (!source.fixed) {
+          source.vx += fx;
+          source.vy += fy;
+        }
+        if (!target.fixed) {
+          target.vx -= fx;
+          target.vy -= fy;
+        }
+      }
+    });
+
+    nodes.forEach((node) => {
+      if (node.fixed) return;
+      node.vx *= damping;
+      node.vy *= damping;
+      node.x += node.vx;
+      node.y += node.vy;
+
+      node.x = Math.max(node.size / 2, Math.min(width - node.size / 2, node.x));
+      node.y = Math.max(node.size / 2 + 20, Math.min(height - node.size / 2 - 20, node.y));
+    });
+  }
+
+  function animate() {
+    applyForces();
+    updatePositions();
+    requestAnimationFrame(animate);
+  }
+
+  function updateTransform() {
+    svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    svg.style.transformOrigin = 'center center';
+  }
+
+  function getMousePos(e) {
+    const rect = svg.getBoundingClientRect();
+    const x = (e.clientX - rect.left - translateX) / scale;
+    const y = (e.clientY - rect.top - translateY) / scale;
+    return { x, y };
+  }
+
+  nodeElements.forEach((el) => {
+    const circle = el.querySelector('.node');
+    const id = el.getAttribute('data-node-id');
+    const node = nodes.find(n => n.id === id);
+
+    circle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const pos = getMousePos(e);
+      draggingNode = node;
+      node.fixed = true;
+      dragOffset = {
+        x: pos.x - node.x,
+        y: pos.y - node.y
+      };
+      circle.style.cursor = 'grabbing';
+    });
+
+    circle.addEventListener('mouseenter', () => {
+      circle.style.stroke = '#005BBB';
+      circle.style.strokeWidth = '3';
+      if (!draggingNode) circle.style.cursor = 'grab';
+    });
+
+    circle.addEventListener('mouseleave', () => {
+      if (!draggingNode) {
+        circle.style.stroke = '#666';
+        circle.style.strokeWidth = '2';
+        circle.style.cursor = 'default';
+      }
+    });
+
+    circle.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      if (node && !draggingNode) {
+        window.location.href = `/posts/${node.slug}`;
+      }
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (draggingNode) {
+      const pos = getMousePos(e);
+      draggingNode.x = Math.max(20, Math.min(width - 20, pos.x - dragOffset.x));
+      draggingNode.y = Math.max(30, Math.min(height - 30, pos.y - dragOffset.y));
+      draggingNode.vx = 0;
+      draggingNode.vy = 0;
+      updatePositions();
+    } else if (isDraggingCanvas) {
+      translateX = dragStartTransform.x + (e.clientX - dragStart.x);
+      translateY = dragStartTransform.y + (e.clientY - dragStart.y);
+      updateTransform();
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggingNode) {
+      const circle = document.querySelector(`.node-group[data-node-id="${draggingNode.id}"] .node`);
+      if (circle) {
+        circle.style.cursor = 'grab';
+      }
+    }
+    draggingNode = null;
+    isDraggingCanvas = false;
+    container.style.cursor = 'default';
+  });
+
+  svg.addEventListener('mousedown', (e) => {
+    if (e.target === svg) {
+      isDraggingCanvas = true;
+      dragStart = { x: e.clientX, y: e.clientY };
+      dragStartTransform = { x: translateX, y: translateY };
+      container.style.cursor = 'grabbing';
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    nodes.forEach((node) => {
+      node.x = Math.random() * 600 + 100;
+      node.y = Math.random() * 400 + 100;
+      node.vx = 0;
+      node.vy = 0;
+      node.fixed = false;
+    });
+    translateX = 0;
+    translateY = 0;
+    scale = 1;
+    updateTransform();
+  });
+
+  document.getElementById('zoom-in-btn').addEventListener('click', () => {
+    const newScale = Math.min(scale + 0.1, 3);
+    const rect = svg.getBoundingClientRect();
+    translateX = rect.width / 2 - (rect.width / 2 - translateX) * (newScale / scale);
+    translateY = rect.height / 2 - (rect.height / 2 - translateY) * (newScale / scale);
+    scale = newScale;
+    updateTransform();
+  });
+
+  document.getElementById('zoom-out-btn').addEventListener('click', () => {
+    const newScale = Math.max(scale - 0.1, 0.3);
+    const rect = svg.getBoundingClientRect();
+    translateX = rect.width / 2 - (rect.width / 2 - translateX) * (newScale / scale);
+    translateY = rect.height / 2 - (rect.height / 2 - translateY) * (newScale / scale);
+    scale = newScale;
+    updateTransform();
+  });
+
+  updateTransform();
+  animate();
+})();</script></main> <footer data-astro-cid-sz7xmlte> <div class="footer-content" data-astro-cid-sz7xmlte> <p class="copyright" data-astro-cid-sz7xmlte>© 2026 一心. All rights reserved.</p> </div>  </footer> </div>  </body> </html>

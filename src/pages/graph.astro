@@ -27,6 +27,7 @@ function buildGraph(posts: { slug: string; data: { title: string; tags: string[]
     tags: string[];
     size: number;
     fixed: boolean;
+    isDangling: boolean;
   }> = [];
   const edges: Array<{ source: string; target: string }> = [];
   const nodeMap = new Map<string, typeof nodes[0]>();
@@ -46,7 +47,8 @@ function buildGraph(posts: { slug: string; data: { title: string; tags: string[]
         vy: 0,
         tags: post.data.tags,
         size: 20 + post.data.tags.length * 2,
-        fixed: false
+        fixed: false,
+        isDangling: false
       };
       nodeMap.set(slug, node);
       nodes.push(node);
@@ -65,6 +67,29 @@ function buildGraph(posts: { slug: string; data: { title: string; tags: string[]
         if (node.title.toLowerCase() === targetTitle || key === targetTitle) {
           targetNode = node;
           break;
+        }
+      }
+      
+      if (!targetNode) {
+        const danglingId = targetTitle.toLowerCase().replace(/\s+/g, '-');
+        if (!nodeMap.has(danglingId)) {
+          targetNode = {
+            id: danglingId,
+            title: targetTitle,
+            slug: '',
+            x: Math.random() * 600 + 100,
+            y: Math.random() * 400 + 100,
+            vx: 0,
+            vy: 0,
+            tags: [],
+            size: 16,
+            fixed: false,
+            isDangling: true
+          };
+          nodeMap.set(danglingId, targetNode);
+          nodes.push(targetNode);
+        } else {
+          targetNode = nodeMap.get(danglingId)!;
         }
       }
       
@@ -159,14 +184,14 @@ const { nodes, edges } = buildGraph(publishedPosts);
             {nodes.map((node) => (
               <g class="node-group" data-node-id={node.id}>
                 <circle
-                  class="node"
+                  class={`node ${node.isDangling ? 'dangling' : ''}`}
                   r={node.size / 2}
                   cx={node.x}
                   cy={node.y}
                   filter="url(#glow)"
                 />
                 <text
-                  class="node-label"
+                  class={`node-label ${node.isDangling ? 'dangling' : ''}`}
                   x={node.x}
                   y={node.y + node.size / 2 + 16}
                   text-anchor="middle"
@@ -185,6 +210,10 @@ const { nodes, edges } = buildGraph(publishedPosts);
           <div class="legend-item">
             <div class="legend-node"></div>
             <span>文章节点</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-node dangling"></div>
+            <span>悬空节点</span>
           </div>
           <div class="legend-item">
             <div class="legend-edge"></div>
@@ -299,12 +328,28 @@ const { nodes, edges } = buildGraph(publishedPosts);
     stroke: #004d99;
   }
 
+  .node.dangling {
+    fill: #999;
+    stroke: #666;
+    stroke-dasharray: 4, 2;
+  }
+
+  .node.dangling:hover {
+    fill: #888;
+    stroke: #555;
+  }
+
   .node-label {
     fill: #333;
     font-size: 11px;
     pointer-events: none;
     user-select: none;
     font-weight: 500;
+  }
+
+  .node-label.dangling {
+    fill: #999;
+    font-style: italic;
   }
 
   .legend {
@@ -338,6 +383,11 @@ const { nodes, edges } = buildGraph(publishedPosts);
     border-radius: 50%;
     background: #0066CC;
     border: 2px solid #005BBB;
+  }
+
+  .legend-node.dangling {
+    background: #999;
+    border: 2px dashed #666;
   }
 
   .legend-edge {
@@ -567,7 +617,7 @@ const { nodes, edges } = buildGraph(publishedPosts);
 
     circle.addEventListener('dblclick', (e) => {
       e.stopPropagation();
-      if (node && !draggingNode) {
+      if (node && !draggingNode && !node.isDangling) {
         window.location.href = `/posts/${node.slug}`;
       }
     });
