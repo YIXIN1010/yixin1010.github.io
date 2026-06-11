@@ -107,8 +107,42 @@ const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts
     </div>
 
     <div class="about-me">
-      <h2 class="about-title">About Me</h2>
-      <p class="about-content">这是一个属于文科生的个人知识系统博客，不定期发布随笔与短句。希望保持创作、复盘、总结的状态，多一点对世界的理解与认识，始终保持好奇的心态。</p>
+      <div class="about-left">
+        <div class="avatar-container">
+          <img src="/avatar.png" alt="数字分身" class="avatar" />
+        </div>
+      </div>
+      <div class="about-right">
+        <h2 class="about-title">About Me</h2>
+        <p class="about-content">这是一个属于文科生的个人知识系统博客，不定期发布随笔与短句。希望保持创作、复盘、总结的状态，多一点对世界的理解与认识，始终保持好奇的心态。</p>
+      </div>
+    </div>
+
+    <!-- AI 聊天按钮 -->
+    <div class="ai-chat-fab" id="aiChatFab">
+      <span class="ai-fab-icon">🤖</span>
+      <span class="ai-fab-tooltip">AI 对话</span>
+    </div>
+
+    <!-- AI 聊天窗口 -->
+    <div class="ai-chat-window" id="aiChatWindow">
+      <div class="ai-chat-header-bar">
+        <div class="ai-chat-title">
+          <span class="ai-chat-icon">🤖</span>
+          <span>AI 助手</span>
+        </div>
+        <button class="ai-chat-close" id="aiChatClose">×</button>
+      </div>
+      <div class="ai-chat-body" id="aiChatBody">
+        <div class="ai-message">
+          <span class="ai-message-icon">🤖</span>
+          <div class="ai-message-content">你好！我是 AI 助手，有什么可以帮助你的吗？</div>
+        </div>
+      </div>
+      <div class="ai-chat-input-area">
+        <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="输入消息..." />
+        <button class="ai-chat-send" id="aiChatSend">发送</button>
+      </div>
     </div>
 
     <div class="heatmap-section">
@@ -274,11 +308,42 @@ const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts
     }
 
     .about-me {
+      display: flex;
+      gap: 2.5rem;
       margin-bottom: 2rem;
       padding: 1.5rem 0;
-      background: transparent;
-      border-radius: 0;
+      background: #FAFAF7;
+      border-radius: 12px;
       text-align: left;
+      align-items: flex-start;
+    }
+
+    .about-left {
+      flex-shrink: 0;
+    }
+
+    .about-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .avatar-container {
+      width: 140px;
+      height: 140px;
+      border: 2px dashed #D0D0D0;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+    }
+
+    .avatar {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
     }
 
     .about-title {
@@ -295,6 +360,187 @@ const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts
       color: #444444;
       font-size: 0.95em;
       line-height: 1.8;
+    }
+
+    /* AI 聊天悬浮按钮 */
+    .ai-chat-fab {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 56px;
+      height: 56px;
+      background: #0066CC;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .ai-chat-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4);
+    }
+
+    .ai-fab-icon {
+      font-size: 1.5rem;
+    }
+
+    .ai-fab-tooltip {
+      position: absolute;
+      right: 70px;
+      background: #333;
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .ai-chat-fab:hover .ai-fab-tooltip {
+      opacity: 1;
+    }
+
+    /* AI 聊天窗口 */
+    .ai-chat-window {
+      position: fixed;
+      bottom: 6rem;
+      right: 2rem;
+      width: 360px;
+      height: 480px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .ai-chat-window.active {
+      display: flex;
+    }
+
+    .ai-chat-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      background: #0066CC;
+      color: #fff;
+    }
+
+    .ai-chat-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+
+    .ai-chat-icon {
+      font-size: 1.2rem;
+    }
+
+    .ai-chat-close {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .ai-chat-close:hover {
+      opacity: 1;
+    }
+
+    .ai-chat-body {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .ai-message {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .ai-message-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .ai-message-content {
+      background: #F0F0F0;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      border-top-left-radius: 4px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .user-message {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      flex-direction: row-reverse;
+    }
+
+    .user-message .user-message-content {
+      background: #0066CC;
+      color: #fff;
+      border-radius: 12px;
+      border-top-right-radius: 4px;
+    }
+
+    .ai-chat-input-area {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid #E5E5E5;
+    }
+
+    .ai-chat-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid #E5E5E5;
+      border-radius: 24px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .ai-chat-input:focus {
+      border-color: #0066CC;
+    }
+
+    .ai-chat-send {
+      padding: 0.75rem 1.25rem;
+      background: #0066CC;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .ai-chat-send:hover {
+      background: #005BBB;
     }
 
     .section-wrapper {
@@ -558,6 +804,51 @@ const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts
         font-size: 2.2em;
       }
       
+      .about-me {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+      
+      .about-left {
+        display: flex;
+        justify-content: center;
+      }
+      
+      .about-right {
+        align-items: center;
+      }
+      
+      .avatar-container {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .avatar-wrapper {
+        width: 120px;
+        height: 120px;
+      }
+      
+      .ai-chat-window {
+        width: calc(100vw - 2rem);
+        height: 60vh;
+        right: 1rem;
+        bottom: 5rem;
+      }
+      
+      .ai-chat-fab {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 50px;
+        height: 50px;
+      }
+      
+      .ai-fab-tooltip {
+        display: none;
+      }
+      
       .nav-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -585,4 +876,49 @@ const latestPostsByCategory = getLatestPostByCategory(categories, publishedPosts
       }
     }
   </style>
+
+  <script is:inline>
+    const fab = document.getElementById('aiChatFab');
+    const window = document.getElementById('aiChatWindow');
+    const closeBtn = document.getElementById('aiChatClose');
+    const input = document.getElementById('aiChatInput');
+    const sendBtn = document.getElementById('aiChatSend');
+    const body = document.getElementById('aiChatBody');
+
+    fab.addEventListener('click', () => {
+      window.classList.add('active');
+      fab.style.display = 'none';
+    });
+
+    closeBtn.addEventListener('click', () => {
+      window.classList.remove('active');
+      fab.style.display = 'flex';
+    });
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'user-message';
+      userMsg.innerHTML = `<div class="user-message-content">${text}</div>`;
+      body.appendChild(userMsg);
+
+      input.value = '';
+      body.scrollTop = body.scrollHeight;
+
+      setTimeout(() => {
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'ai-message';
+        aiMsg.innerHTML = `<span class="ai-message-icon">🤖</span><div class="ai-message-content">功能开发中...</div>`;
+        body.appendChild(aiMsg);
+        body.scrollTop = body.scrollHeight;
+      }, 500);
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
 </BaseLayout>
