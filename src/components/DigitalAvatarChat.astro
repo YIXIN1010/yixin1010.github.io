@@ -1,0 +1,525 @@
+<script>
+  // 配置区域 - 请替换为你的 Cloudflare Worker 地址
+  const API_URL = "https://restless-unit-4bc0.411313795.workers.dev";
+  const TEMPERATURE = 0.7;
+  const MAX_HISTORY_MESSAGES = 10;
+
+  // System Prompt - 数字分身身份定义
+  const systemPrompt = `你是一心博客的数字分身。
+
+你的身份：
+- 你是一个结构化、务实、注重长期积累的 AI 助手。
+- 你擅长 AI 工具、知识管理、个人博客、Astro、GitHub Pages、Prompt Engineering、RAG、流程优化和工作流优化。
+- 你的回答风格像一个理性、耐心、实用的个人顾问。
+
+表达要求：
+- 使用简体中文回答。
+- 先给结论，再给步骤。
+- 多使用小标题、列表和清晰结构。
+- 不要空泛，要给出可执行建议。
+- 技术问题要同时说明"为什么"和"怎么做"。
+- 如果信息不足，先基于最可能的意图给出方案，并说明可以继续细化。
+- 不要夸张，不要营销化，不要编造事实。
+
+如果页面中读取到了当前文章内容，你需要优先结合当前文章内容回答；如果文章内容不足，再给通用建议。`;
+
+  // 安全注意：
+  // 当前前端只调用 Cloudflare Worker 代理地址。
+  // 不要在前端代码中写入火山方舟 API Key。
+  // 正式环境应将 ARK_API_KEY 和 ARK_MODEL 存放在 Cloudflare Worker Secret 中。
+  // 不要把 .env、.dev.vars 或任何包含密钥的文件提交到 GitHub。
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatButton = document.getElementById('avatar-chat-button');
+    const chatWindow = document.getElementById('avatar-chat-window');
+    const closeButton = document.getElementById('avatar-close-btn');
+    const sendButton = document.getElementById('avatar-send-btn');
+    const inputField = document.getElementById('avatar-input');
+    const messagesContainer = document.getElementById('avatar-messages');
+    const clearButton = document.getElementById('avatar-clear-btn');
+    const loadingIndicator = document.getElementById('avatar-loading');
+
+    let historyMessages = [];
+
+    // 读取当前页面文章内容作为上下文
+    function getPageContext() {
+      const article = document.querySelector('article');
+      if (article) {
+        const text = article.innerText || '';
+        return text.substring(0, 1500);
+      }
+      return '';
+    }
+
+    // 切换聊天窗口显示/隐藏
+    function toggleChat() {
+      chatWindow.classList.toggle('avatar-hidden');
+      chatButton.classList.toggle('avatar-hidden');
+    }
+
+    // 关闭聊天窗口
+    function closeChat() {
+      chatWindow.classList.add('avatar-hidden');
+      chatButton.classList.remove('avatar-hidden');
+    }
+
+    // 添加消息到消息列表
+    function addMessage(content, isUser, isError = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `avatar-message ${isUser ? 'avatar-user' : 'avatar-ai'} ${isError ? 'avatar-error' : ''}`;
+      
+      const bubble = document.createElement('div');
+      bubble.className = `avatar-bubble ${isUser ? 'avatar-user-bubble' : 'avatar-ai-bubble'}`;
+      bubble.textContent = content;
+      
+      messageDiv.appendChild(bubble);
+      messagesContainer.appendChild(messageDiv);
+      scrollToBottom();
+    }
+
+    // 滚动到底部
+    function scrollToBottom() {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // 清空对话
+    function clearChat() {
+      messagesContainer.innerHTML = '';
+      historyMessages = [];
+    }
+
+    // 发送消息
+    async function sendMessage() {
+      const userInput = inputField.value.trim();
+      if (!userInput) return;
+
+      // 显示用户消息
+      addMessage(userInput, true);
+      inputField.value = '';
+
+      // 显示加载状态
+      loadingIndicator.classList.remove('avatar-hidden');
+      sendButton.disabled = true;
+
+      try {
+        // 获取页面上下文
+        const pageContext = getPageContext();
+        let contextPrompt = systemPrompt;
+        if (pageContext) {
+          contextPrompt += `\n\n当前页面内容参考（前1500字）：\n${pageContext}`;
+        }
+
+        // 构建请求消息
+        const requestMessages = [
+          { role: 'system', content: contextPrompt },
+          ...historyMessages,
+          { role: 'user', content: userInput }
+        ];
+
+        // 调用 Cloudflare Worker（前端只发送 messages 和 temperature）
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: requestMessages,
+            temperature: TEMPERATURE
+          })
+        });
+
+        // 隐藏加载状态
+        loadingIndicator.classList.add('avatar-hidden');
+        sendButton.disabled = false;
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // 检查错误
+        if (data.error) {
+          const errorMsg = data.error.message || JSON.stringify(data.error);
+          addMessage(errorMsg, false, true);
+          return;
+        }
+
+        // 读取响应内容
+        const aiResponse = data.choices?.[0]?.message?.content;
+        if (!aiResponse) {
+          addMessage('没有收到有效回复。', false, true);
+          return;
+        }
+
+        // 显示 AI 回复
+        addMessage(aiResponse, false);
+
+        // 更新历史记录（只保留用户和助手消息，不包含 system）
+        historyMessages.push({ role: 'user', content: userInput });
+        historyMessages.push({ role: 'assistant', content: aiResponse });
+
+        // 限制历史消息数量
+        if (historyMessages.length > MAX_HISTORY_MESSAGES * 2) {
+          historyMessages = historyMessages.slice(-MAX_HISTORY_MESSAGES * 2);
+        }
+
+      } catch (error) {
+        loadingIndicator.classList.add('avatar-hidden');
+        sendButton.disabled = false;
+        addMessage('网络请求失败，请稍后再试。', false, true);
+        console.error('Chat error:', error);
+      }
+    }
+
+    // 键盘事件处理
+    function handleKeyDown(event) {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // 绑定事件
+    chatButton?.addEventListener('click', toggleChat);
+    closeButton?.addEventListener('click', closeChat);
+    sendButton?.addEventListener('click', sendMessage);
+    inputField?.addEventListener('keydown', handleKeyDown);
+    clearButton?.addEventListener('click', clearChat);
+  });
+</script>
+
+<!-- 悬浮聊天按钮 -->
+<button id="avatar-chat-button" class="avatar-chat-button">
+  <span class="avatar-icon">💬</span>
+</button>
+
+<!-- 聊天窗口 -->
+<div id="avatar-chat-window" class="avatar-chat-window avatar-hidden">
+  <!-- 头部 -->
+  <div class="avatar-header">
+    <div class="avatar-title">
+      <span class="avatar-icon">👤</span>
+      <span>一心的数字分身</span>
+    </div>
+    <button id="avatar-close-btn" class="avatar-close-btn">×</button>
+  </div>
+  
+  <!-- 副标题 -->
+  <div class="avatar-subtitle">
+    可以问我关于 AI、知识管理、博客、流程优化的问题
+  </div>
+  
+  <!-- 消息列表 -->
+  <div id="avatar-messages" class="avatar-messages">
+    <!-- 消息动态生成 -->
+  </div>
+  
+  <!-- 加载状态 -->
+  <div id="avatar-loading" class="avatar-loading avatar-hidden">
+    <div class="avatar-spinner"></div>
+    <span>思考中...</span>
+  </div>
+  
+  <!-- 底部操作区 -->
+  <div class="avatar-footer">
+    <button id="avatar-clear-btn" class="avatar-clear-btn">清空对话</button>
+    <div class="avatar-input-area">
+      <textarea
+        id="avatar-input"
+        class="avatar-input"
+        placeholder="输入消息..."
+        rows="2"
+      ></textarea>
+      <button id="avatar-send-btn" class="avatar-send-btn">发送</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --avatar-primary: #4f46e5;
+    --avatar-bg: #ffffff;
+    --avatar-panel-bg: #ffffff;
+    --avatar-text: #1f2937;
+    --avatar-muted: #6b7280;
+    --avatar-border: #e5e7eb;
+    --avatar-user-bubble: #4f46e5;
+    --avatar-ai-bubble: #f3f4f6;
+    --avatar-error-bg: #fef2f2;
+    --avatar-error-text: #dc2626;
+    --avatar-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .avatar-chat-button {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--avatar-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: var(--avatar-shadow);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .avatar-chat-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 45px rgba(79, 70, 229, 0.3);
+  }
+
+  .avatar-chat-window {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    width: 360px;
+    height: 560px;
+    background: var(--avatar-panel-bg);
+    border-radius: 16px;
+    box-shadow: var(--avatar-shadow);
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+    transition: opacity 0.3s, transform 0.3s;
+    border: 1px solid var(--avatar-border);
+  }
+
+  .avatar-hidden {
+    display: none !important;
+  }
+
+  .avatar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--avatar-border);
+    background: var(--avatar-bg);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .avatar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--avatar-text);
+  }
+
+  .avatar-icon {
+    font-size: 1.25rem;
+  }
+
+  .avatar-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--avatar-muted);
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background 0.2s;
+    line-height: 1;
+  }
+
+  .avatar-close-btn:hover {
+    background: var(--avatar-ai-bubble);
+    color: var(--avatar-text);
+  }
+
+  .avatar-subtitle {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    color: var(--avatar-muted);
+    background: var(--avatar-ai-bubble);
+  }
+
+  .avatar-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .avatar-message {
+    display: flex;
+    max-width: 100%;
+  }
+
+  .avatar-message.avatar-user {
+    justify-content: flex-end;
+  }
+
+  .avatar-message.avatar-ai {
+    justify-content: flex-start;
+  }
+
+  .avatar-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    max-width: 85%;
+    word-break: break-word;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .avatar-user-bubble {
+    background: var(--avatar-user-bubble);
+    color: white;
+    border-radius: 1rem 1rem 0 1rem;
+  }
+
+  .avatar-ai-bubble {
+    background: var(--avatar-ai-bubble);
+    color: var(--avatar-text);
+    border-radius: 1rem 1rem 1rem 0;
+  }
+
+  .avatar-message.avatar-error .avatar-ai-bubble {
+    background: var(--avatar-error-bg);
+    color: var(--avatar-error-text);
+  }
+
+  .avatar-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    color: var(--avatar-muted);
+    font-size: 0.9rem;
+  }
+
+  .avatar-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--avatar-border);
+    border-top-color: var(--avatar-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .avatar-footer {
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--avatar-border);
+    background: var(--avatar-bg);
+    border-radius: 0 0 16px 16px;
+  }
+
+  .avatar-clear-btn {
+    background: none;
+    border: none;
+    color: var(--avatar-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    margin-bottom: 0.5rem;
+    transition: color 0.2s;
+  }
+
+  .avatar-clear-btn:hover {
+    color: var(--avatar-error-text);
+  }
+
+  .avatar-input-area {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .avatar-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--avatar-border);
+    border-radius: 0.75rem;
+    resize: none;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    background: var(--avatar-bg);
+    color: var(--avatar-text);
+    transition: border-color 0.2s;
+  }
+
+  .avatar-input:focus {
+    outline: none;
+    border-color: var(--avatar-primary);
+  }
+
+  .avatar-input::placeholder {
+    color: var(--avatar-muted);
+  }
+
+  .avatar-send-btn {
+    padding: 0.75rem 1.25rem;
+    background: var(--avatar-primary);
+    color: white;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+    align-self: flex-end;
+  }
+
+  .avatar-send-btn:hover:not(:disabled) {
+    background: #4338ca;
+  }
+
+  .avatar-send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* 滚动条样式 */
+  .avatar-messages::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .avatar-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .avatar-messages::-webkit-scrollbar-thumb {
+    background: var(--avatar-border);
+    border-radius: 3px;
+  }
+
+  .avatar-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--avatar-muted);
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 480px) {
+    .avatar-chat-window {
+      right: 0.5rem;
+      bottom: 0.5rem;
+      left: 0.5rem;
+      width: calc(100% - 1rem);
+      height: 70vh;
+      max-height: 500px;
+    }
+
+    .avatar-chat-button {
+      right: 0.75rem;
+      bottom: 0.75rem;
+      width: 56px;
+      height: 56px;
+    }
+  }
+</style>
