@@ -16,10 +16,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section class="about-like">
       <h2>我的更多</h2>
-      <p>给我启发、喜欢的人</p>
-      <p>木心、陀思妥耶夫斯基、歌德、三岛由纪夫、梭罗、蔡澜、陈丹青</p>
-      <p>我喜欢的书</p>
-      <p>瓦尔登湖、文学回忆录、少年维特的烦恼、白痴、</p>
+      
+      <div class="like-section">
+        <h3>给我启发、喜欢的人</h3>
+        <p>木心、陀思妥耶夫斯基、歌德、三岛由纪夫、梭罗、蔡澜、陈丹青...</p>
+      </div>
+      
+      <div class="like-section">
+        <h3>我喜欢的书</h3>
+        <p>瓦尔登湖、文学回忆录、少年维特的烦恼、白痴...</p>
+      </div>
+      
+      <div class="like-section">
+        <h3>喜欢的音乐</h3>
+        <p>III、唯一、And The Winter Is、ICARUS、Back In The Games...</p>
+      </div>
+      
+      <div class="like-section">
+        <h3>认可、喜欢的词语</h3>
+        <p>Be Water、Open Mind、World Citizen、Balance、终身学习、保持好奇心、Impermanence</p>
+      </div>
     </section>
 
     <section class="about-site">
@@ -54,6 +70,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     p {
       color: #444444;
       line-height: 1.8;
+    }
+
+    .like-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .like-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .like-section h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2D2D2D;
+    }
+
+    .like-section p {
+      margin: 0;
+      color: #555555;
+      font-size: 0.9rem;
     }
   </style>
 </BaseLayout>
