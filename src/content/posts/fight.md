@@ -1,11 +1,10 @@
 ---
 title: "格斗比赛直面残酷的人生"
-date: "2026-06-11"
-updated: "2026-06-11"
+date: "2026-06-15"
+updated: "2026-06-15"
 summary: "关于爱好的一些感悟"
 tags:
   - UFC
-  - 
 category: "随笔生活"
 draft: false
 ---
